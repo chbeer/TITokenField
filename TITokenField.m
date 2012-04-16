@@ -31,72 +31,89 @@
 @synthesize sourceArray;
 
 #pragma mark Init
+
+- (void) setupSubviews
+{
+    [self setBackgroundColor:[UIColor clearColor]];
+    [self setDelaysContentTouches:YES];
+    [self setMultipleTouchEnabled:NO];
+    
+    showAlreadyTokenized = NO;
+    resultsArray = [[NSMutableArray alloc] init];
+    
+    tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 42)];
+    [tokenField addTarget:self action:@selector(tokenFieldDidBeginEditing:) forControlEvents:UIControlEventEditingDidBegin];
+    [tokenField addTarget:self action:@selector(tokenFieldDidEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
+    [tokenField addTarget:self action:@selector(tokenFieldTextDidChange:) forControlEvents:UIControlEventEditingChanged];
+    [tokenField addTarget:self action:@selector(tokenFieldFrameWillChange:) forControlEvents:TITokenFieldControlEventFrameWillChange];
+    [tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
+    [tokenField setDelegate:self];
+    [self addSubview:tokenField];
+    [tokenField release];
+    
+    CGFloat tokenFieldBottom = CGRectGetMaxY(tokenField.frame);
+    
+    separator = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom, self.bounds.size.width, 1)];
+    [separator setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
+    [self addSubview:separator];
+    [separator release];
+    
+    // This view is created for convenience, because it resizes and moves with the rest of the subviews.
+    contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width, 
+                                                           self.bounds.size.height - tokenFieldBottom - 1)];
+    [contentView setBackgroundColor:[UIColor clearColor]];
+    [self addSubview:contentView];
+    [contentView release];
+    
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad){
+        
+        UITableViewController * tableViewController = [[UITableViewController alloc] initWithStyle:UITableViewStylePlain];
+        [tableViewController.tableView setDelegate:self];
+        [tableViewController.tableView setDataSource:self];
+        [tableViewController setContentSizeForViewInPopover:CGSizeMake(400, 400)];
+        
+        resultsTable = tableViewController.tableView;
+        
+        popoverController = [[UIPopoverController alloc] initWithContentViewController:tableViewController];
+        [tableViewController release];
+    }
+    else
+    {
+        resultsTable = [[UITableView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width, 10)];
+        [resultsTable setSeparatorColor:[UIColor colorWithWhite:0.85 alpha:1]];
+        [resultsTable setBackgroundColor:[UIColor colorWithRed:0.92 green:0.92 blue:0.92 alpha:1]];
+        [resultsTable setDelegate:self];
+        [resultsTable setDataSource:self];
+        [resultsTable setHidden:YES];
+        [self addSubview:resultsTable];
+        [resultsTable release];
+        
+        popoverController = nil;
+    }
+    
+    [self bringSubviewToFront:separator];
+    [self bringSubviewToFront:tokenField];
+    [self updateContentSize];
+}
+
 - (id)initWithFrame:(CGRect)frame {
 	
     if ((self = [super initWithFrame:frame])){
-		
-		[self setBackgroundColor:[UIColor clearColor]];
-		[self setDelaysContentTouches:YES];
-		[self setMultipleTouchEnabled:NO];
-		
-		showAlreadyTokenized = NO;
-		resultsArray = [[NSMutableArray alloc] init];
-		
-		tokenField = [[TITokenField alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, 42)];
-		[tokenField addTarget:self action:@selector(tokenFieldDidBeginEditing:) forControlEvents:UIControlEventEditingDidBegin];
-		[tokenField addTarget:self action:@selector(tokenFieldDidEndEditing:) forControlEvents:UIControlEventEditingDidEnd];
-		[tokenField addTarget:self action:@selector(tokenFieldTextDidChange:) forControlEvents:UIControlEventEditingChanged];
-		[tokenField addTarget:self action:@selector(tokenFieldFrameWillChange:) forControlEvents:TITokenFieldControlEventFrameWillChange];
-		[tokenField addTarget:self action:@selector(tokenFieldFrameDidChange:) forControlEvents:TITokenFieldControlEventFrameDidChange];
-		[tokenField setDelegate:self];
-		[self addSubview:tokenField];
-		[tokenField release];
-		
-		CGFloat tokenFieldBottom = CGRectGetMaxY(tokenField.frame);
-		
-		separator = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom, self.bounds.size.width, 1)];
-		[separator setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
-		[self addSubview:separator];
-		[separator release];
-		
-		// This view is created for convenience, because it resizes and moves with the rest of the subviews.
-		contentView = [[UIView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width, 
-															   self.bounds.size.height - tokenFieldBottom - 1)];
-		[contentView setBackgroundColor:[UIColor clearColor]];
-		[self addSubview:contentView];
-		[contentView release];
-		
-		if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad){
-			
-			UITableViewController * tableViewController = [[UITableViewController alloc] initWithStyle:UITableViewStylePlain];
-			[tableViewController.tableView setDelegate:self];
-			[tableViewController.tableView setDataSource:self];
-			[tableViewController setContentSizeForViewInPopover:CGSizeMake(400, 400)];
-			
-			resultsTable = tableViewController.tableView;
-			
-			popoverController = [[UIPopoverController alloc] initWithContentViewController:tableViewController];
-			[tableViewController release];
-		}
-		else
-		{
-			resultsTable = [[UITableView alloc] initWithFrame:CGRectMake(0, tokenFieldBottom + 1, self.bounds.size.width, 10)];
-			[resultsTable setSeparatorColor:[UIColor colorWithWhite:0.85 alpha:1]];
-			[resultsTable setBackgroundColor:[UIColor colorWithRed:0.92 green:0.92 blue:0.92 alpha:1]];
-			[resultsTable setDelegate:self];
-			[resultsTable setDataSource:self];
-			[resultsTable setHidden:YES];
-			[self addSubview:resultsTable];
-			[resultsTable release];
-			
-			popoverController = nil;
-		}
-		
-		[self bringSubviewToFront:separator];
-		[self bringSubviewToFront:tokenField];
-		[self updateContentSize];
+
+		[self setupSubviews];
+
 	}
 	
+    return self;
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super initWithCoder:aDecoder];
+    if (!self) return nil;
+    
+    [self setupSubviews];
+    
     return self;
 }
 
