@@ -9,6 +9,8 @@
 #import "TITokenField.h"
 #import <QuartzCore/QuartzCore.h>
 
+#import "UIColor+DDD.h"
+
 //==========================================================
 #pragma mark - TITokenFieldView -
 //==========================================================
@@ -1022,6 +1024,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 }
 
 #pragma mark Layout
+/*
 - (void)sizeToFit {
 	
 	CGFloat accessoryWidth = 0;
@@ -1037,10 +1040,42 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	[self setFrame:((CGRect){self.frame.origin, {MAX(floorf(titleSize.width + hTextPadding + accessoryWidth), height - 3), height}})];
 	[self setNeedsDisplay];
 }
+ */
+
+- (CGSize)sizeThatFits:(CGSize)size
+{
+	CGSize titleSize = [title sizeWithFont:font forWidth:maxWidth - hTextPadding lineBreakMode:kLineBreakMode];
+	CGFloat height = floorf(titleSize.height + vTextPadding);
+    
+    return CGSizeMake(titleSize.width + hTextPadding, height);
+}
 
 #pragma mark Drawing
 - (void)drawRect:(CGRect)rect {
+    
+    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.bounds
+                                                    cornerRadius:3.0];
+    
+    if (self.selected) {
+		[[UIColor blueColor] set];
+	} else if (self.highlighted) {
+		[[UIColor redColor] set];
+	} else {
+		[[UIColor colorWithHexColor:0x009fe3] set];
+	}
+    
+    [path fill];
+    
+    
+    CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding) lineBreakMode:kLineBreakMode];
+	CGFloat vPadding = floor((self.bounds.size.height - titleSize.height) / 2);
+	CGFloat titleWidth = ceilf(self.bounds.size.width - hTextPadding);
+	CGRect textBounds = CGRectMake(floorf(hTextPadding / 2), vPadding - 1, titleWidth, floorf(self.bounds.size.height - (vPadding * 2)));
 	
+	CGContextSetFillColor(UIGraphicsGetCurrentContext(), (CGFloat[4]){1, 1, 1, 1}/* : (CGFloat[4]){0, 0, 0, 1})*/);
+	[title drawInRect:textBounds withFont:font lineBreakMode:kLineBreakMode];
+    
+/*
 	CGContextRef context = UIGraphicsGetCurrentContext();
 	
 	// Draw the outline.
@@ -1148,6 +1183,7 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
 	
 	CGContextSetFillColor(context, (drawHighlighted ? (CGFloat[4]){1, 1, 1, 1} : (CGFloat[4]){0, 0, 0, 1}));
 	[title drawInRect:textBounds withFont:font lineBreakMode:kLineBreakMode];
+*/
 }
 
 CGPathRef CGPathCreateTokenPath(CGSize size, BOOL innerPath) {
