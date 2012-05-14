@@ -238,7 +238,9 @@
 	
 	CGFloat tokenFieldBottom = CGRectGetMaxY(tokenField.frame);
 	[separator setFrame:((CGRect){{separator.frame.origin.x, tokenFieldBottom}, separator.bounds.size})];
-	[resultsTable setFrame:((CGRect){{resultsTable.frame.origin.x, (tokenFieldBottom + 1)}, resultsTable.bounds.size})];
+    if (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad){
+        [resultsTable setFrame:((CGRect){{resultsTable.frame.origin.x, (tokenFieldBottom + 1)}, resultsTable.bounds.size})];
+    }
 	[contentView setFrame:((CGRect){{contentView.frame.origin.x, (tokenFieldBottom + 1)}, contentView.bounds.size})];
 }
 
@@ -1070,7 +1072,8 @@ CGPathRef CGPathCreateDisclosureIndicatorPath(CGPoint arrowPointFront, CGFloat h
     CGSize titleSize = [title sizeWithFont:font forWidth:(maxWidth - hTextPadding) lineBreakMode:kLineBreakMode];
 	CGFloat vPadding = floor((self.bounds.size.height - titleSize.height) / 2);
 	CGFloat titleWidth = ceilf(self.bounds.size.width - hTextPadding);
-	CGRect textBounds = CGRectMake(floorf(hTextPadding / 2), vPadding - 1, titleWidth, floorf(self.bounds.size.height - (vPadding * 2)));
+	CGRect textBounds = CGRectMake(floorf(hTextPadding / 2), vPadding,  
+                                   titleWidth, titleSize.height);
 	
 	CGContextSetFillColor(UIGraphicsGetCurrentContext(), (CGFloat[4]){1, 1, 1, 1}/* : (CGFloat[4]){0, 0, 0, 1})*/);
 	[title drawInRect:textBounds withFont:font lineBreakMode:kLineBreakMode];
